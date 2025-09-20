@@ -37,34 +37,128 @@ static void TermptySetWindowSizeFromPixels(int px_w, int px_h) {
 	ioctl(pty_fd, TIOCSWINSZ, &ws);
 }
 
-static void *TermptyReader(void *arg) {
-	(void)arg;
-	char buf[8192];
-	for (;;) {
-		ssize_t n = read(pty_fd, buf, sizeof(buf));
-		if (n > 0) {
-			buf[n] = '\0';
-			printf("TermptyReader(): '%s'\n", (char *)buf);
-			TermbufWrite(&terminal_buffer, buf, (size_t)n);
-			ScrollbackAddLine(buf, n, 0);
+static void TermptyStripEscapes(char *in, char *out, unsigned long max_length, unsigned long *out_length) {
+	char *c = in;
+	unsigned long cnt_in = 0, cnt_out = 0;
+	while (1) {
+		if (*c == '\0' || cnt_in >= max_length) {
+			out[cnt_out] = '\0';
+			break;
+		}
+		else if (*c == '\033' && *(c+1) == '[') {
+			cnt_in += 2;
+			c += 2;
+			char *c2 = c;
+			char *c3 = c;
+			// ignore \033[?2004l\r\n
+			if (*c2 == '?' && *(++c2) == '2' &&
+			  *(++c2) == '0' && *(++c2) == '0' && *(++c2) == '4' &&
+			  *(++c2) == 'l' && *(++c2) == '\r' && *(++c2) == '\n') {
+			  	printf("c2\n");
+		  		cnt_in += 8;
+		  		c = c2 + 1;
+				continue;
+			}
+			// ignore \033[?2004h
+			else if (*c3 == '?' && *(++c3) == '2' &&
+			  *(++c3) == '0' && *(++c3) == '0' && *(++c3) == '4' && *(++c3) == 'h') {
+				printf("c3\n");
+				cnt_in += 6;
+				c = c3 + 1;
+				continue;
+			}
+			else {
+				printf("else...\n");
+				while (1) {
+					if (isdigit(*c) || *c == ';') {
+						++cnt_in;
+						++c;
+						continue;
+					}
+					else if (*c == 'm') {
+						++cnt_in;
+						++c;
+						break;
+					}
+					else if (*c == '\0')
+						break;
+					else {
+						++cnt_in;
+						++c;
+					}
+				}
+				
+				if (*c == '\0') {
+					out[cnt_out] = '\0';
+					break;
+				}
+				else
+					continue;
+			}
+		}
+		else {
+			printf("out[cnt_out] = *c\n");
+			out[cnt_out] = *c;
+			++c;
+			++cnt_in;
+			++cnt_out;
+		}
+	}
+	
+	if (out_length != NULL)
+		*out_length = cnt_out;
+}
 
-//			terminal_cursor_pos += n;
-//			terminal_buffer_length += n;
+static void *TermptyReader(void *arg) {
+	char buf[8192];
+	char buf_no_escapes[8192];
+	unsigned long buf_no_escapes_length;
+	for (;;) {
+		memset(buf, 0, 8192);
+		memset(buf_no_escapes, 0, 8192);
+		buf_no_escapes_length = 0;
+		long n = read(pty_fd, buf, 8191);
+		//long n = read(pty_fd, buf_no_escapes, 8191);
+		//buf_no_escapes_length = strlen(buf_no_escapes);
+		if (n > 0) {
+			TermptyStripEscapes(buf, buf_no_escapes, (unsigned long)n, &buf_no_escapes_length);
+			printf("TermptyReader(): '%s'\n", buf_no_escapes);
+			
+			/* printf("###>");
+			char *c = buf;
+			while (*c != '\0') {
+				printf("#%d:%c:", (int)*c, (char)*c);
+				++c;
+			}
+			printf("<###\n"); */
+			
+			ScrollbackAddLine(buf_no_escapes, buf_no_escapes_length, 0);
+			
+			char *buf_last_line = TermbufOnlyKeepLastLine(buf_no_escapes);
+			//TermbufWrite(&terminal_buffer, buf_no_escapes, buf_no_escapes_length);
+			TermbufWrite(&terminal_buffer, buf_last_line, strlen(buf_last_line));
+			
+			terminal_cursor_pos = buf_no_escapes_length;
+			terminal_buffer_length = buf_no_escapes_length;
 
 			// Nudge SDL thread to redraw
 			SDL_Event ev;
 			memset(&ev, 0, sizeof(ev));
 			ev.type = EV_PTY_DATA;
-			ev.user.code = (int)n;
+			ev.user.code = (int)buf_no_escapes_length;
 			SDL_PushEvent(&ev);
+			
 			continue;
 		}
-		if (n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+		else if (n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
 			// Sleep a tick to yield CPU
 			struct timespec ts = {.tv_sec=0, .tv_nsec=2*1000*1000}; // 2ms
 			nanosleep(&ts, NULL);
 			continue;
 		}
+		else if (n <= 0)
+			continue;
+
 		// n == 0 (EOF) or fatal error => child likely exited
 		break;
 	}
@@ -92,7 +186,8 @@ int TerminalSpawnShell(const char *shell_path) {
 
 	child_pid = forkpty(&pty_fd, NULL, &tio, &ws);
 	if (child_pid < 0) {
-		perror("forkpty");
+		printf("pixpty::TerminalSpawnShell() error: forkpty() failed: %s\n",
+			strerror(errno));
 		return -1;
 	}
 	if (child_pid == 0) {
@@ -110,8 +205,10 @@ int TerminalSpawnShell(const char *shell_path) {
 	fcntl(pty_fd, F_SETFL, flags | O_NONBLOCK);
 
 	// Start reader thread
-	if (pthread_create(&reader_thr, NULL, TermptyReader, NULL) != 0) {
-		perror("pthread_create");
+	int ret = pthread_create(&reader_thr, NULL, TermptyReader, NULL);
+	if (ret != 0) {
+		printf("pixpty::TerminalSpawnShell() error: pthread_create() failed: %s\n",
+			strerror(ret));
 		close(pty_fd);
 		pty_fd = -1;
 		return -1;
@@ -127,12 +224,14 @@ void TerminalSendInput(const void *data, size_t nbytes) {
 		
 		char *c = (char *)data;
 		if (*c == '\n') {
+			pthread_mutex_lock(&terminal_buffer.mu);
 			ScrollbackAddLine(terminal_buffer.buf, terminal_buffer_length, 0);
-//			(void)write(pty_fd, data, nbytes);
-//			memset(terminal_buffer.buf, 0, terminal_buffer.cap);
-//			terminal_cursor_pos = 0;
-//			terminal_buffer_length = 0;
-//			return;
+			memset(terminal_buffer.buf, 0, terminal_buffer.cap);
+			terminal_buffer.r = 0;
+			terminal_buffer.w = 0;
+			pthread_mutex_unlock(&terminal_buffer.mu);
+			terminal_cursor_pos = 0;
+			terminal_buffer_length = 0;
 		}
 		
 		// Best effort; ignore EAGAIN (kernel ring full)

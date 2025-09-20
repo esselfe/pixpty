@@ -38,24 +38,23 @@ void ScrollbackAddLine(char *text, unsigned int length, int is_wrapped) {
 	scrollback.last_line = line;
 	++scrollback.total_lines;
 		
-	if (is_wrapped || length > terminal_cols) {
+	if (is_wrapped || length > terminal_cols)
 		line->is_wrapped = 1;
-		int cnt;
-		char *c;
-		for (c = text, cnt = 0; cnt < length; c++, cnt++) {
+
+	int cnt;
+	char *c;
+	for (c = text, cnt = 0; cnt < line_size; c++, cnt++) {
+		if (*c == '\0') break;
+		else if (*c == '\n') {
+			++c;
 			if (*c == '\0') break;
-			
-			if (*c == '\n') {
-				++c;
+			else 
 				ScrollbackAddLine(c, strlen(c), 1);
-				break;
-			}
-			else
-				line->text[cnt] = *c;
+
+			break;
 		}
-	}
-	else {
-		sprintf(line->text, "%s", text);
+		else
+			line->text[cnt] = *c;
 	}
 }
 

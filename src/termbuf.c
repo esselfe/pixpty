@@ -41,6 +41,32 @@ static inline int TermbufRingFree(termbuf_t *t) {
 	return (t->r + t->cap - t->w - 1) % t->cap;
 }
 
+char *TermbufOnlyKeepLastLine(char *buffer) {
+	unsigned long cnt = 0;
+	char *c = buffer;
+	char *last_newline = c;
+	char *buf = NULL;
+	while (1) {
+		if (*c == '\0') {
+			buf = malloc(strlen(last_newline) + 1);
+			memset(buf, 0, strlen(last_newline) + 1);
+			sprintf(buf, "%s", last_newline +
+			  (*last_newline == '\n' ? 1 : 0));
+			
+			break;
+		}
+		else if (*c == '\n') {
+			last_newline = c;
+			++cnt;
+		}
+		
+		++c;
+		++cnt;
+	}
+	
+	return buf;
+}
+
 void TermbufWrite(termbuf_t *t, const char *src, unsigned long n) {
 	pthread_mutex_lock(&t->mu);
 	if (n >= t->cap) { // Keep the most recent (cap-1)

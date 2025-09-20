@@ -72,6 +72,7 @@ typedef struct {
 extern termbuf_t terminal_buffer;
 void TermbufInit(termbuf_t *tb, unsigned long cap);
 void TermbufFree(termbuf_t *tb);
+char *TermbufOnlyKeepLastLine(char *buffer);
 void TermbufReset(termbuf_t *tb);
 void TermbufWrite(termbuf_t *tb, const char *src, unsigned long n);
 
@@ -84,9 +85,7 @@ int TerminalChildIsAlive(void);
 void TerminalShutdown(void);
 
 // From terminal.c
-extern unsigned int terminal_visible, terminal_blink;
-//extern char *terminal_buffer;
-extern unsigned int terminal_buffer_length, terminal_buffer_size;
+extern unsigned long terminal_buffer_length, terminal_buffer_size;
 extern unsigned int terminal_cursor_pos, terminal_cursor_blink;
 extern unsigned int terminal_rows, terminal_cols;
 void TerminalInit(void);

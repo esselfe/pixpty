@@ -7,9 +7,7 @@
 
 #include "pixpty.h"
 
-unsigned int terminal_visible;
-unsigned int terminal_buffer_length, terminal_buffer_size;
-//char *terminal_buffer;
+unsigned long terminal_buffer_length, terminal_buffer_size;
 unsigned int terminal_cursor_pos, terminal_cursor_blink;
 unsigned int terminal_rows, terminal_cols;
 
@@ -17,22 +15,18 @@ void TerminalInit(void) {
 	if (terminal_buffer_size == 0)
 		terminal_buffer_size = TERMINAL_BUFFER_DEFAULT_SIZE;
 	
-//	terminal_buffer = malloc(terminal_buffer_size);
-//	if (terminal_buffer == NULL) {
-//		printf("pixpty::TerminalInit() error: malloc() returned NULL, exiting.\n");
-//		exit(1);
-//	}
-//	memset(terminal_buffer, 0, terminal_buffer_size);
-	
 	terminal_buffer_length = 0;
 	terminal_cursor_blink = 1;
 
 	TerminalSpawnShell("/bin/bash");
 }
 
+// TODO: The terminal buffer contains both prompt and input command, which needs to be
+// isolated for this function
+// Meant for builtin-like parsing of commands
 void TerminalParse(void) {
-	//return;
-	/*
+	return;
+/*
 	char w1[128], w2[128], w3[128], w4[128];
 	memset(w1, 0, 128);
 	memset(w2, 0, 128);
@@ -104,13 +98,6 @@ void TerminalParse(void) {
 			mainloopend = 1;
 	}
 */
-	
-/*	pthread_mutex_lock(&terminal_buffer.mu);
-	TerminalSendInput((const void *)terminal_buffer.buf, terminal_buffer_length);
-	terminal_cursor_pos = 0;
-	memset(terminal_buffer.buf, 0, terminal_buffer.cap);
-	pthread_mutex_unlock(&terminal_buffer.mu);
-	terminal_buffer_length = 0; */
 }
 
 void TerminalRender(void) {
@@ -118,8 +105,8 @@ void TerminalRender(void) {
 	glColor4f(0.1, 0.15, 0.2, 1.0);
 	glBegin(GL_QUADS);
 	glVertex3i(0, 0, 0);
-	glVertex3i(0, 24, 0);
-	glVertex3i((int)winW, 24, 0);
+	glVertex3i(0, 20, 0);
+	glVertex3i((int)winW, 20, 0);
 	glVertex3i((int)winW, 0, 0);
 	glEnd();
 
@@ -127,7 +114,7 @@ void TerminalRender(void) {
 		glColor4f(0.3, 0.4, 0.5, 1.0);
 		glBegin(GL_LINES);
 		glVertex3i(terminal_cursor_pos * 8 + 1, 2, 1);
-		glVertex3i(terminal_cursor_pos * 8 + 1, 22, 1);
+		glVertex3i(terminal_cursor_pos * 8 + 1, 18, 1);
 		glEnd();
 	}
 

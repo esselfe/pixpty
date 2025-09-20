@@ -61,8 +61,8 @@ int main(int argc, char **argv) {
 	EventsInit();
 	DeltaInit();
 	RenderInit();
-	TermbufInit(&terminal_buffer, TERMINAL_BUFFER_DEFAULT_SIZE);
 	TerminalInit();
+	TermbufInit(&terminal_buffer, terminal_buffer_size);
 
 	while (!mainloopend) {
 		EventsCheck();

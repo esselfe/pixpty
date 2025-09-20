@@ -1,5 +1,5 @@
 
-CFLAGS = -std=c11 -Wall -D_DEFAULT_SOURCE -O2
+CFLAGS = -g -DDEBUG=1-std=c11 -Wall -D_DEFAULT_SOURCE -O2
 LDFLAGS = -lSDL2 -lGL -lGLU -lpng16 -lutil -lpthread
 OBJDIR = obj
 OBJS = $(OBJDIR)/delta.o $(OBJDIR)/events.o $(OBJDIR)/font.o \
@@ -13,7 +13,7 @@ PROGNAME = pixpty
 default: all
 
 all: prepare $(PROGNAME)
-	@ls -l --color=auto $(LIBNAME) $(PROGNAME) || true
+	@ls -l --color=auto $(PROGNAME) || true
 
 prepare:
 	@[ -d "$(OBJDIR)" ] || mkdir -v "$(OBJDIR)"
@@ -39,11 +39,11 @@ $(OBJDIR)/scrollback.o: src/scrollback.c
 $(OBJDIR)/termbuf.o: src/termbuf.c
 	gcc -c $(CFLAGS) src/termbuf.c -o $(OBJDIR)/termbuf.o
 
-$(OBJDIR)/termpty.o: src/termpty.c
-	gcc -c $(CFLAGS) src/termpty.c -o $(OBJDIR)/termpty.o
-
 $(OBJDIR)/terminal.o: src/terminal.c
 	gcc -c $(CFLAGS) src/terminal.c -o $(OBJDIR)/terminal.o
+
+$(OBJDIR)/termpty.o: src/termpty.c
+	gcc -c $(CFLAGS) src/termpty.c -o $(OBJDIR)/termpty.o
 
 $(OBJDIR)/pixpty.o: src/pixpty.c
 	gcc -c $(CFLAGS) src/pixpty.c -o $(OBJDIR)/pixpty.o
