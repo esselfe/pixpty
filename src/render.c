@@ -48,20 +48,20 @@ static void RenderSet2DView(void) {
 void Render(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// Switch to 3D rendering (Scene)
-	//RenderSet3DView();
-
-	//SkyRender();
-	//FloorRender();
-
-	// Switch to 2D rendering (HUD)
 	RenderSet2DView();
 
 	FontRender(BG_NONE, winW - (8 * strlen(fps_text)) - 8, winH - 24, fps_text);
 
-	if (terminal_visible) TerminalRender();
+	TerminalRender();
 
 	SDL_GL_SwapWindow(window);
 	++fps;
+}
+
+void RenderResize(int width, int height) {
+	winW = width;
+	winH = height;
+	glViewport((GLint)0, (GLint)0, (GLsizei)winW, (GLsizei)winH);
+	RenderSet2DView();
 }
 

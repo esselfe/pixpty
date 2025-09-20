@@ -1,9 +1,10 @@
 
 CFLAGS = -std=c11 -Wall -D_DEFAULT_SOURCE -O2
-LDFLAGS = -lSDL2 -lGL -lGLU -lpng16
+LDFLAGS = -lSDL2 -lGL -lGLU -lpng16 -lutil -lpthread
 OBJDIR = obj
 OBJS = $(OBJDIR)/delta.o $(OBJDIR)/events.o $(OBJDIR)/font.o \
-$(OBJDIR)/image.o $(OBJDIR)/render.o $(OBJDIR)/terminal.o \
+$(OBJDIR)/image.o $(OBJDIR)/render.o $(OBJDIR)/scrollback.o \
+$(OBJDIR)/terminal.o $(OBJDIR)/termbuf.o $(OBJDIR)/termpty.o \
 $(OBJDIR)/pixpty.o
 PROGNAME = pixpty
 
@@ -31,6 +32,15 @@ $(OBJDIR)/image.o: src/image.c
 
 $(OBJDIR)/render.o: src/render.c
 	gcc -c $(CFLAGS) src/render.c -o $(OBJDIR)/render.o
+
+$(OBJDIR)/scrollback.o: src/scrollback.c
+	gcc -c $(CFLAGS) src/scrollback.c -o $(OBJDIR)/scrollback.o
+
+$(OBJDIR)/termbuf.o: src/termbuf.c
+	gcc -c $(CFLAGS) src/termbuf.c -o $(OBJDIR)/termbuf.o
+
+$(OBJDIR)/termpty.o: src/termpty.c
+	gcc -c $(CFLAGS) src/termpty.c -o $(OBJDIR)/termpty.o
 
 $(OBJDIR)/terminal.o: src/terminal.c
 	gcc -c $(CFLAGS) src/terminal.c -o $(OBJDIR)/terminal.o

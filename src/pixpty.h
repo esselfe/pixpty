@@ -41,9 +41,28 @@ extern unsigned int fps;
 extern char *fps_text;
 void RenderInit(void);
 void Render(void);
+void RenderResize(int width, int height);
+
+// From scrollback.c
+struct Line {
+	struct Line *prev, *next;
+	unsigned long rank;
+	unsigned int is_wrapped;
+	unsigned long length;
+	char *text;
+};
+struct Scrollback {
+	struct Line *first_line, *last_line;
+	unsigned long total_bytes;
+	unsigned long total_lines;
+};
+extern struct Scrollback scrollback;
+void ScrollbackInit(void);
+void ScrollbackAddLine(char *line, unsigned int length, int is_wrapped);
+void ScrollbackClear(void);
 
 // From termbuf.c
-#define TERMINAL_BUFFER_DEFAULT_SIZE 4096
+#define TERMINAL_BUFFER_DEFAULT_SIZE 8192
 typedef struct {
     char *buf;
     unsigned long cap;       // capacity
@@ -53,6 +72,7 @@ typedef struct {
 extern termbuf_t terminal_buffer;
 void TermbufInit(termbuf_t *tb, unsigned long cap);
 void TermbufFree(termbuf_t *tb);
+void TermbufReset(termbuf_t *tb);
 void TermbufWrite(termbuf_t *tb, const char *src, unsigned long n);
 
 // From termpty.c
@@ -68,6 +88,7 @@ extern unsigned int terminal_visible, terminal_blink;
 //extern char *terminal_buffer;
 extern unsigned int terminal_buffer_length, terminal_buffer_size;
 extern unsigned int terminal_cursor_pos, terminal_cursor_blink;
+extern unsigned int terminal_rows, terminal_cols;
 void TerminalInit(void);
 void TerminalParse(void);
 void TerminalRender(void);

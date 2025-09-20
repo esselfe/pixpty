@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <pthread.h>
 #include <GL/gl.h>
 
 #include "pixpty.h"
@@ -10,6 +11,7 @@ unsigned int terminal_visible;
 unsigned int terminal_buffer_length, terminal_buffer_size;
 //char *terminal_buffer;
 unsigned int terminal_cursor_pos, terminal_cursor_blink;
+unsigned int terminal_rows, terminal_cols;
 
 void TerminalInit(void) {
 	if (terminal_buffer_size == 0)
@@ -24,7 +26,6 @@ void TerminalInit(void) {
 	
 	terminal_buffer_length = 0;
 	terminal_cursor_blink = 1;
-	terminal_visible = 1;
 
 	TerminalSpawnShell("/bin/bash");
 }
@@ -103,32 +104,44 @@ void TerminalParse(void) {
 			mainloopend = 1;
 	}
 */
+	
+/*	pthread_mutex_lock(&terminal_buffer.mu);
+	TerminalSendInput((const void *)terminal_buffer.buf, terminal_buffer_length);
 	terminal_cursor_pos = 0;
 	memset(terminal_buffer.buf, 0, terminal_buffer.cap);
-	terminal_buffer_length = 0;
+	pthread_mutex_unlock(&terminal_buffer.mu);
+	terminal_buffer_length = 0; */
 }
 
 void TerminalRender(void) {
-	glPushMatrix();
+	// Prompt background
 	glColor4f(0.1, 0.15, 0.2, 1.0);
 	glBegin(GL_QUADS);
-	glVertex3i(10, 10, 0);
-	glVertex3i(10, 34, 0);
-	glVertex3i((int)winW-10, 34, 0);
-	glVertex3i((int)winW-10, 10, 0);
+	glVertex3i(0, 0, 0);
+	glVertex3i(0, 24, 0);
+	glVertex3i((int)winW, 24, 0);
+	glVertex3i((int)winW, 0, 0);
 	glEnd();
 
 	if (terminal_cursor_blink) {
 		glColor4f(0.3, 0.4, 0.5, 1.0);
 		glBegin(GL_LINES);
-		glVertex3i(terminal_cursor_pos * 8 + 14, 12, 1);
-		glVertex3i(terminal_cursor_pos * 8 + 14, 32, 1);
+		glVertex3i(terminal_cursor_pos * 8 + 1, 2, 1);
+		glVertex3i(terminal_cursor_pos * 8 + 1, 22, 1);
 		glEnd();
 	}
 
 	if (strlen(terminal_buffer.buf))
-		FontRender(BG_GREY, 12, 14, terminal_buffer.buf);
+		FontRender(BG_GREY, 2, 2, terminal_buffer.buf);
 	
-	glPopMatrix();
+	struct Line *line = scrollback.last_line;
+	while (line != NULL) {
+		glPushMatrix();
+		glTranslatef(0.0, 20.0 * (scrollback.total_lines - line->rank), 0.0);
+		FontRender(BG_BLACK, 2, 2, line->text);	
+		glPopMatrix();
+		
+		line = line->prev;
+	}
 }
 

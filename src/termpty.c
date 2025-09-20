@@ -1,20 +1,18 @@
-// pty_term.c
-#define _GNU_SOURCE
-#include <errno.h>
-#include <fcntl.h>
-#include <pthread.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
 #include <string.h>
+#include <fcntl.h>
+#include <signal.h>
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <termios.h>
-#include <unistd.h>
-#include <pty.h>	   // forkpty(), Linux: -lutil
-#include <SDL2/SDL.h>  // for SDL events to wake main loop
+#include <pty.h>
+#include <pthread.h>
+#include <SDL2/SDL.h>
 
-#include "pixpty.h"	// for winW/winH or cols/rows if you track them
+#include "pixpty.h"
 
 static int pty_fd = -1;
 static pid_t child_pid = -1;
@@ -24,11 +22,11 @@ Uint32 EV_PTY_DATA; // custom SDL event to wake render
 // Compute terminal cell size from glyphs (8x16 here)
 static inline void TermptyCalcRowsCols(int px_w, int px_h, int *cols, int *rows) {
 	int cw = 8, ch = 16;
-	*cols = (px_w  > 0) ? (px_w / cw)  : 80;
-	*rows = (px_h  > 0) ? (px_h / ch)  : 25;
+	terminal_cols = *cols = (px_w  > 0) ? (px_w / cw)  : 80;
+	terminal_rows = *rows = (px_h  > 0) ? (px_h / ch)  : 25;
 }
 
-static void set_winsize_from_pixels(int px_w, int px_h) {
+static void TermptySetWindowSizeFromPixels(int px_w, int px_h) {
 	if (pty_fd < 0) return;
 	int cols, rows;
 	TermptyCalcRowsCols(px_w, px_h, &cols, &rows);
@@ -41,14 +39,17 @@ static void set_winsize_from_pixels(int px_w, int px_h) {
 
 static void *TermptyReader(void *arg) {
 	(void)arg;
-	uint8_t buf[8192];
+	char buf[8192];
 	for (;;) {
 		ssize_t n = read(pty_fd, buf, sizeof(buf));
 		if (n > 0) {
+			buf[n] = '\0';
+			printf("TermptyReader(): '%s'\n", (char *)buf);
 			TermbufWrite(&terminal_buffer, buf, (size_t)n);
+			ScrollbackAddLine(buf, n, 0);
 
-			terminal_cursor_pos += n;
-			terminal_buffer_length += n;
+//			terminal_cursor_pos += n;
+//			terminal_buffer_length += n;
 
 			// Nudge SDL thread to redraw
 			SDL_Event ev;
@@ -98,6 +99,7 @@ int TerminalSpawnShell(const char *shell_path) {
 		// Child: new session on slave PTY
 		setenv("TERM", "xterm-256color", 1);
 		setenv("COLORTERM", "truecolor", 1);
+		setenv("PS1", "\\t\\u@\\h:\\l:\\w\\$ ", 1);
 		const char *sh = (shell_path && *shell_path) ? shell_path : "/bin/bash";
 		execlp(sh, sh, "-i", NULL);
 		exit(127);
@@ -110,7 +112,8 @@ int TerminalSpawnShell(const char *shell_path) {
 	// Start reader thread
 	if (pthread_create(&reader_thr, NULL, TermptyReader, NULL) != 0) {
 		perror("pthread_create");
-		close(pty_fd); pty_fd = -1;
+		close(pty_fd);
+		pty_fd = -1;
 		return -1;
 	}
 	pthread_detach(reader_thr);
@@ -120,13 +123,25 @@ int TerminalSpawnShell(const char *shell_path) {
 
 void TerminalSendInput(const void *data, size_t nbytes) {
 	if (pty_fd >= 0 && nbytes) {
+		//printf("TerminalSendInput(): '%s'\n", (char *)data);
+		
+		char *c = (char *)data;
+		if (*c == '\n') {
+			ScrollbackAddLine(terminal_buffer.buf, terminal_buffer_length, 0);
+//			(void)write(pty_fd, data, nbytes);
+//			memset(terminal_buffer.buf, 0, terminal_buffer.cap);
+//			terminal_cursor_pos = 0;
+//			terminal_buffer_length = 0;
+//			return;
+		}
+		
 		// Best effort; ignore EAGAIN (kernel ring full)
 		(void)write(pty_fd, data, nbytes);
 	}
 }
 
 void TerminalOnResize(int px_w, int px_h) {
-	set_winsize_from_pixels(px_w, px_h);
+	TermptySetWindowSizeFromPixels(px_w, px_h);
 }
 
 int TerminalChildIsAlive(void) {
@@ -134,7 +149,7 @@ int TerminalChildIsAlive(void) {
 	int status = 0;
 	pid_t r = waitpid(child_pid, &status, WNOHANG);
 	if (r == 0) return 1; // still running
-	return 0;			 // reaped or error
+	else return 0;        // reaped or error
 }
 
 void TerminalShutdown(void) {

@@ -74,14 +74,20 @@ static char ShiftKey(SDL_Keycode key) {
 }
 
 void EventsCheck(void) {
+	size_t nchars = 0;
+	char seq[8];
+	memset(seq, 0, 8);
+	
 	while (SDL_PollEvent(&event)) {
-		if (event.type == SDL_QUIT)
+		if (event.type == SDL_QUIT) {
 			mainloopend = 1;
+			return;
+		}
 		else if (event.type == SDL_TEXTINPUT)
 			TerminalSendInput(event.text.text, strlen(event.text.text));
 		
-		if (event.type == SDL_KEYDOWN && event.key.repeat == 1) {
-			if (terminal_visible && event.key.keysym.sym == SDLK_BACKSPACE) {
+/*		if (event.type == SDL_KEYDOWN && event.key.repeat == 1) {
+			if (event.key.keysym.sym == SDLK_BACKSPACE) {
 				if (terminal_cursor_pos > 0) {
 					terminal_buffer.buf[--terminal_cursor_pos] = '\0';
 					--terminal_buffer_length;
@@ -89,35 +95,37 @@ void EventsCheck(void) {
 				return;
 			}
 		}
-		else if (event.type == SDL_KEYDOWN && event.key.repeat == 0) {
-			char seq[8]; size_t n = 0;
+		else */
+		if (event.type == SDL_KEYDOWN/* && event.key.repeat == 0*/) {
 			switch (event.key.keysym.sym) {
-			case SDLK_RETURN: seq[0] = '\r'; n=1; break;
-			case SDLK_BACKSPACE: seq[0] = 0x7f; n=1; break;
-			case SDLK_TAB: seq[0] = '\t'; n=1; break;
-			case SDLK_ESCAPE: seq[0] = 0x1b; n=1; break;
-			case SDLK_UP:    memcpy(seq, "\x1b[A", 3); n=3; break;
-			case SDLK_DOWN:  memcpy(seq, "\x1b[B", 3); n=3; break;
-			case SDLK_RIGHT: memcpy(seq, "\x1b[C", 3); n=3; break;
-			case SDLK_LEFT:  memcpy(seq, "\x1b[D", 3); n=3; break;
-			case SDLK_HOME:  memcpy(seq, "\x1b[H", 3); n=3; break;
-			case SDLK_END:   memcpy(seq, "\x1b[F", 3); n=3; break;
-			case SDLK_DELETE: memcpy(seq, "\x1b[3~", 4); n=4; break;
-			case SDLK_PAGEUP: memcpy(seq, "\x1b[5~", 4); n=4; break;
-			case SDLK_PAGEDOWN: memcpy(seq, "\x1b[6~", 4); n=4; break;
+			case SDLK_RETURN: seq[0] = '\n'; nchars=1; break;
+			case SDLK_BACKSPACE: seq[0] = 0x7f; nchars=1; break;
+			//case SDLK_TAB: seq[0] = '\t'; nchars=1; break;
+			//case SDLK_ESCAPE: seq[0] = 0x1b; nchars=1; break;
+			//case SDLK_UP:    memcpy(seq, "\x1b[A", 3); nchars=3; break;
+			//case SDLK_DOWN:  memcpy(seq, "\x1b[B", 3); nchars=3; break;
+			//case SDLK_RIGHT: memcpy(seq, "\x1b[C", 3); nchars=3; break;
+			//case SDLK_LEFT:  memcpy(seq, "\x1b[D", 3); nchars=3; break;
+			//case SDLK_HOME:  memcpy(seq, "\x1b[H", 3); nchars=3; break;
+			//case SDLK_END:   memcpy(seq, "\x1b[F", 3); nchars=3; break;
+			//case SDLK_DELETE: memcpy(seq, "\x1b[3~", 4); nchars=4; break;
+			//case SDLK_PAGEUP: memcpy(seq, "\x1b[5~", 4); nchars=4; break;
+			//case SDLK_PAGEDOWN: memcpy(seq, "\x1b[6~", 4); nchars=4; break;
 			default: break;
 			}
-			if (n) {
-				TerminalSendInput(seq, n);
-			}
-			else if (terminal_visible && (event.key.keysym.sym >= SDLK_SPACE && 
-				event.key.keysym.sym <= SDLK_z)) {
-				if (mods & MOD_CTRL && event.key.keysym.sym == SDLK_c) {
-					terminal_cursor_pos = 0;
-					memset(terminal_buffer.buf, 0, terminal_buffer.cap);
-					terminal_buffer_length = 0;
-				}
-				else if (terminal_cursor_pos < terminal_buffer_size) {
+			
+			if (nchars)
+				TerminalSendInput(seq, nchars);
+			
+			if (event.key.keysym.sym >= SDLK_SPACE && 
+				event.key.keysym.sym <= SDLK_z) {
+				//if (mods & MOD_CTRL && event.key.keysym.sym == SDLK_c) {
+				//	terminal_cursor_pos = 0;
+				//	memset(terminal_buffer.buf, 0, terminal_buffer.cap);
+				//	terminal_buffer_length = 0;
+				//}
+				//else
+				if (terminal_cursor_pos < terminal_buffer_size) {
 					if (mods & MOD_SHIFT)
 						terminal_buffer.buf[terminal_cursor_pos++] = ShiftKey(event.key.keysym.sym);
 					else
@@ -127,15 +135,15 @@ void EventsCheck(void) {
 				}	
 				return;
 			}
-			else if (terminal_visible && event.key.keysym.sym == SDLK_BACKSPACE) {
+			else if (event.key.keysym.sym == SDLK_BACKSPACE) {
 				if (terminal_cursor_pos > 0) {
 					terminal_buffer.buf[--terminal_cursor_pos] = '\0';
 					--terminal_buffer_length;
 				}
 				return;
 			}
-			else if (terminal_visible && event.key.keysym.sym == SDLK_RETURN) {
-				TerminalParse();
+			else if (event.key.keysym.sym == SDLK_RETURN) {
+				//TerminalParse();
 				return;
 			}
 			
@@ -154,9 +162,6 @@ void EventsCheck(void) {
 			case SDLK_LSHIFT:
 			case SDLK_RSHIFT:
 				mods |= MOD_SHIFT;
-				break;
-			case SDLK_TAB:
-				terminal_visible = !terminal_visible;
 				break;
 			case SDLK_UP:
 				break;
@@ -204,7 +209,7 @@ void EventsCheck(void) {
 			if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
 				winW = event.window.data1;
 				winH = event.window.data2;
-				//RenderResize(winW, winH);
+				RenderResize(winW, winH);
 				TerminalOnResize(winW, winH);
 			}
 	    	}
