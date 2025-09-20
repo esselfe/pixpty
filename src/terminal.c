@@ -8,26 +8,30 @@
 
 unsigned int terminal_visible;
 unsigned int terminal_buffer_length, terminal_buffer_size;
-char *terminal_buffer;
+//char *terminal_buffer;
 unsigned int terminal_cursor_pos, terminal_cursor_blink;
 
 void TerminalInit(void) {
 	if (terminal_buffer_size == 0)
 		terminal_buffer_size = TERMINAL_BUFFER_DEFAULT_SIZE;
 	
-	terminal_buffer = malloc(terminal_buffer_size);
-	if (terminal_buffer == NULL) {
-		printf("pixpty::TerminalInit() error: malloc() returned NULL, exiting.\n");
-		exit(1);
-	}
-	memset(terminal_buffer, 0, terminal_buffer_size);
+//	terminal_buffer = malloc(terminal_buffer_size);
+//	if (terminal_buffer == NULL) {
+//		printf("pixpty::TerminalInit() error: malloc() returned NULL, exiting.\n");
+//		exit(1);
+//	}
+//	memset(terminal_buffer, 0, terminal_buffer_size);
 	
 	terminal_buffer_length = 0;
 	terminal_cursor_blink = 1;
 	terminal_visible = 1;
+
+	TerminalSpawnShell("/bin/bash");
 }
 
 void TerminalParse(void) {
+	//return;
+	/*
 	char w1[128], w2[128], w3[128], w4[128];
 	memset(w1, 0, 128);
 	memset(w2, 0, 128);
@@ -98,9 +102,9 @@ void TerminalParse(void) {
 			strcmp(w1, "qw") == 0)
 			mainloopend = 1;
 	}
-
+*/
 	terminal_cursor_pos = 0;
-	memset(terminal_buffer, 0, terminal_buffer_size);
+	memset(terminal_buffer.buf, 0, terminal_buffer.cap);
 	terminal_buffer_length = 0;
 }
 
@@ -122,8 +126,8 @@ void TerminalRender(void) {
 		glEnd();
 	}
 
-	if (strlen(terminal_buffer))
-		FontRender(BG_GREY, 12, 14, terminal_buffer);
+	if (strlen(terminal_buffer.buf))
+		FontRender(BG_GREY, 12, 14, terminal_buffer.buf);
 	
 	glPopMatrix();
 }

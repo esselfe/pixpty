@@ -42,10 +42,30 @@ extern char *fps_text;
 void RenderInit(void);
 void Render(void);
 
-// From terminal.c
+// From termbuf.c
 #define TERMINAL_BUFFER_DEFAULT_SIZE 4096
+typedef struct {
+    char *buf;
+    unsigned long cap;       // capacity
+    unsigned long r, w;                // read, write indices (mod cap)
+    pthread_mutex_t mu;
+} termbuf_t;
+extern termbuf_t terminal_buffer;
+void TermbufInit(termbuf_t *tb, unsigned long cap);
+void TermbufFree(termbuf_t *tb);
+void TermbufWrite(termbuf_t *tb, const char *src, unsigned long n);
+
+// From termpty.c
+extern Uint32 EV_PTY_DATA;
+int TerminalSpawnShell(const char *shell_path);
+void TerminalSendInput(const void *data, size_t nbytes);
+void TerminalOnResize(int px_w, int px_h);
+int TerminalChildIsAlive(void);
+void TerminalShutdown(void);
+
+// From terminal.c
 extern unsigned int terminal_visible, terminal_blink;
-extern char *terminal_buffer;
+//extern char *terminal_buffer;
 extern unsigned int terminal_buffer_length, terminal_buffer_size;
 extern unsigned int terminal_cursor_pos, terminal_cursor_blink;
 void TerminalInit(void);

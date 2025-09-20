@@ -24,6 +24,8 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
+	SDL_StartTextInput();
+
 	window_title = malloc(window_title_len + 1);
 	if (window_title == NULL) {
 		printf("pixpty error: malloc() returned NULL, exiting.\n");
@@ -59,6 +61,7 @@ int main(int argc, char **argv) {
 	EventsInit();
 	DeltaInit();
 	RenderInit();
+	TermbufInit(&terminal_buffer, TERMINAL_BUFFER_DEFAULT_SIZE);
 	TerminalInit();
 
 	while (!mainloopend) {
