@@ -1,5 +1,5 @@
 
-CFLAGS = -g -DDEBUG=1-std=c11 -Wall -D_DEFAULT_SOURCE -O2
+CFLAGS = -g -DDEBUG=1 -std=c11 -Wall -D_DEFAULT_SOURCE -O2
 LDFLAGS = -lSDL2 -lGL -lGLU -lpng16 -lutil -lpthread
 OBJDIR = obj
 OBJS = $(OBJDIR)/delta.o $(OBJDIR)/events.o $(OBJDIR)/font.o \
