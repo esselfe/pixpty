@@ -18,7 +18,7 @@ void RenderInit(void) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
-	glFrontFace(GL_CW);
+	glFrontFace(GL_CCW);
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glViewport((GLint)0, (GLint)0, (GLsizei)winW, (GLsizei)winH);
 }
@@ -57,22 +57,11 @@ void Render(void) {
 	// Switch to 2D rendering (HUD)
 	RenderSet2DView();
 
-	glPushMatrix();
-	glTranslatef(10.0, 10.0, 0.0);
-	glRotatef(delta, 0.0, 0.0, 1.0);
-	glColor4f(0.2, 0.3, 0.4, 1.0);
-	glBegin(GL_TRIANGLE_STRIP);
-	
-	glVertex3i(0, 5, 1);
-	glVertex3i(-5, -5, 1);
-	glVertex3i(5, -5, 1);
-	//glVertex3i(0, 5, 1);
-
-	glEnd();
-	glPopMatrix();
+	FontRender(BG_NONE, winW - (8 * strlen(fps_text)) - 8, winH - 24, fps_text);
 
 	if (terminal_visible) TerminalRender();
 
 	SDL_GL_SwapWindow(window);
+	++fps;
 }
 

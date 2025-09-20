@@ -25,6 +25,17 @@ extern unsigned int mouse_button, mouse_held;
 void EventsInit(void);
 void EventsCheck(void);
 
+// From font.c
+#define BG_NONE            0
+#define BG_BLACK           1
+#define BG_GRAY            2
+#define BG_GREY            2
+void FontInit(void);
+void FontRender(int bgcolor, int x, int y, char *text);
+
+// From image.c
+GLubyte *ImageFromPNGFile(unsigned int width, unsigned int height, char *filename);
+
 // From render.c
 extern unsigned int fps;
 extern char *fps_text;

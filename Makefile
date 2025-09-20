@@ -1,9 +1,10 @@
 
 CFLAGS = -std=c11 -Wall -D_DEFAULT_SOURCE -O2
-LDFLAGS = -lSDL2 -lGL -lGLU
+LDFLAGS = -lSDL2 -lGL -lGLU -lpng16
 OBJDIR = obj
-OBJS = $(OBJDIR)/delta.o $(OBJDIR)/events.o $(OBJDIR)/render.o \
-$(OBJDIR)/terminal.o $(OBJDIR)/pixpty.o
+OBJS = $(OBJDIR)/delta.o $(OBJDIR)/events.o $(OBJDIR)/font.o \
+$(OBJDIR)/image.o $(OBJDIR)/render.o $(OBJDIR)/terminal.o \
+$(OBJDIR)/pixpty.o
 PROGNAME = pixpty
 
 .PHONY: default all prepare clean
@@ -21,6 +22,12 @@ $(OBJDIR)/delta.o: src/delta.c
 
 $(OBJDIR)/events.o: src/events.c
 	gcc -c $(CFLAGS) src/events.c -o $(OBJDIR)/events.o
+
+$(OBJDIR)/font.o: src/font.c
+	gcc -c $(CFLAGS) src/font.c -o $(OBJDIR)/font.o
+
+$(OBJDIR)/image.o: src/image.c
+	gcc -c $(CFLAGS) src/image.c -o $(OBJDIR)/image.o
 
 $(OBJDIR)/render.o: src/render.c
 	gcc -c $(CFLAGS) src/render.c -o $(OBJDIR)/render.o

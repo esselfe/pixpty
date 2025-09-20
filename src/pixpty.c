@@ -55,6 +55,7 @@ int main(int argc, char **argv) {
 	// Needs an OpenGL context initialized
 	printf("OpenGL %s available.\n", glGetString(GL_VERSION));
 
+	FontInit();
 	EventsInit();
 	DeltaInit();
 	RenderInit();

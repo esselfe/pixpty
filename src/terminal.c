@@ -105,7 +105,8 @@ void TerminalParse(void) {
 }
 
 void TerminalRender(void) {
-	glColor4f(0.2, 0.25, 0.3, 1.0);
+	glPushMatrix();
+	glColor4f(0.1, 0.15, 0.2, 1.0);
 	glBegin(GL_QUADS);
 	glVertex3i(10, 10, 0);
 	glVertex3i(10, 34, 0);
@@ -114,14 +115,16 @@ void TerminalRender(void) {
 	glEnd();
 
 	if (terminal_cursor_blink) {
-		glColor3f(0.3, 0.4, 0.5);
+		glColor4f(0.3, 0.4, 0.5, 1.0);
 		glBegin(GL_LINES);
 		glVertex3i(terminal_cursor_pos * 8 + 14, 12, 1);
 		glVertex3i(terminal_cursor_pos * 8 + 14, 32, 1);
 		glEnd();
 	}
 
-//	if (strlen(terminal_buffer))
-//		FontRender2D(BG_NONE, 12, 14, terminal_buffer);
+	if (strlen(terminal_buffer))
+		FontRender(BG_GREY, 12, 14, terminal_buffer);
+	
+	glPopMatrix();
 }
 
