@@ -69,6 +69,8 @@ int main(int argc, char **argv) {
 		EventsCheck();
 		DeltaUpdate();
 		Render();
+
+		usleep(100000); // 100ms
 	}
 	
 	SDL_GL_DeleteContext(context);
