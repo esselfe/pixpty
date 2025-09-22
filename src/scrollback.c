@@ -10,7 +10,7 @@
 struct Scrollback scrollback;
 
 void ScrollbackInit(void) {
-
+	return;
 }
 
 void ScrollbackAddLine(char *text, unsigned int length, int is_wrapped) {
@@ -59,6 +59,6 @@ void ScrollbackAddLine(char *text, unsigned int length, int is_wrapped) {
 }
 
 void ScrollbackClear(void) {
-
+	return;
 }
 

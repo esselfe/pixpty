@@ -86,17 +86,7 @@ void EventsCheck(void) {
 		else if (event.type == SDL_TEXTINPUT)
 			TerminalSendInput(event.text.text, strlen(event.text.text));
 		
-/*		if (event.type == SDL_KEYDOWN && event.key.repeat == 1) {
-			if (event.key.keysym.sym == SDLK_BACKSPACE) {
-				if (terminal_cursor_pos > 0) {
-					terminal_buffer.buf[--terminal_cursor_pos] = '\0';
-					--terminal_buffer_length;
-				}
-				return;
-			}
-		}
-		else */
-		if (event.type == SDL_KEYDOWN/* && event.key.repeat == 0*/) {
+		if (event.type == SDL_KEYDOWN) {
 			switch (event.key.keysym.sym) {
 			case SDLK_RETURN: seq[0] = '\n'; nchars=1; break;
 			case SDLK_BACKSPACE: seq[0] = 0x7f; nchars=1; break;
@@ -118,13 +108,7 @@ void EventsCheck(void) {
 				TerminalSendInput(seq, nchars);
 			
 			if (event.key.keysym.sym >= SDLK_SPACE && 
-				event.key.keysym.sym <= SDLK_z) {
-				//if (mods & MOD_CTRL && event.key.keysym.sym == SDLK_c) {
-				//	terminal_cursor_pos = 0;
-				//	memset(terminal_buffer.buf, 0, terminal_buffer.cap);
-				//	terminal_buffer_length = 0;
-				//}
-				//else
+			  event.key.keysym.sym <= SDLK_z) {
 				if (terminal_cursor_pos < terminal_buffer_size) {
 					if (mods & MOD_SHIFT)
 						terminal_buffer.buf[terminal_cursor_pos++] = ShiftKey(event.key.keysym.sym);

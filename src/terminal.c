@@ -102,7 +102,7 @@ void TerminalParse(void) {
 
 void TerminalRender(void) {
 	// Prompt background
-	glColor4f(0.1, 0.15, 0.2, 1.0);
+	glColor4f(0.05, 0.1, 0.15, 1.0);
 	glBegin(GL_QUADS);
 	glVertex3i(0, 0, 0);
 	glVertex3i(0, 20, 0);
@@ -128,7 +128,10 @@ void TerminalRender(void) {
 		FontRender(BG_BLACK, 2, 2, line->text);	
 		glPopMatrix();
 		
-		line = line->prev;
+		if ((scrollback.total_lines - line->rank) * 20.0 >= winH)
+			break;
+		else
+			line = line->prev;
 	}
 }
 

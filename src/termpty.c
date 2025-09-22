@@ -54,7 +54,6 @@ static void TermptyStripEscapes(char *in, char *out, unsigned long max_length, u
 			if (*c2 == '?' && *(++c2) == '2' &&
 			  *(++c2) == '0' && *(++c2) == '0' && *(++c2) == '4' &&
 			  *(++c2) == 'l' && *(++c2) == '\r' && *(++c2) == '\n') {
-			  	printf("c2\n");
 		  		cnt_in += 8;
 		  		c = c2 + 1;
 				continue;
@@ -62,13 +61,11 @@ static void TermptyStripEscapes(char *in, char *out, unsigned long max_length, u
 			// ignore \033[?2004h
 			else if (*c3 == '?' && *(++c3) == '2' &&
 			  *(++c3) == '0' && *(++c3) == '0' && *(++c3) == '4' && *(++c3) == 'h') {
-				printf("c3\n");
 				cnt_in += 6;
 				c = c3 + 1;
 				continue;
 			}
 			else {
-				printf("else...\n");
 				while (1) {
 					if (isdigit(*c) || *c == ';') {
 						++cnt_in;
@@ -97,7 +94,6 @@ static void TermptyStripEscapes(char *in, char *out, unsigned long max_length, u
 			}
 		}
 		else {
-			printf("out[cnt_out] = *c\n");
 			out[cnt_out] = *c;
 			++c;
 			++cnt_in;
@@ -118,8 +114,6 @@ static void *TermptyReader(void *arg) {
 		memset(buf_no_escapes, 0, 8192);
 		buf_no_escapes_length = 0;
 		long n = read(pty_fd, buf, 8191);
-		//long n = read(pty_fd, buf_no_escapes, 8191);
-		//buf_no_escapes_length = strlen(buf_no_escapes);
 		if (n > 0) {
 			TermptyStripEscapes(buf, buf_no_escapes, (unsigned long)n, &buf_no_escapes_length);
 			printf("TermptyReader(): '%s'\n", buf_no_escapes);
@@ -135,7 +129,6 @@ static void *TermptyReader(void *arg) {
 			ScrollbackAddLine(buf_no_escapes, buf_no_escapes_length, 0);
 			
 			char *buf_last_line = TermbufOnlyKeepLastLine(buf_no_escapes);
-			//TermbufWrite(&terminal_buffer, buf_no_escapes, buf_no_escapes_length);
 			TermbufWrite(&terminal_buffer, buf_last_line, strlen(buf_last_line));
 			
 			terminal_cursor_pos = buf_no_escapes_length;
@@ -194,7 +187,6 @@ int TerminalSpawnShell(const char *shell_path) {
 		// Child: new session on slave PTY
 		setenv("TERM", "xterm-256color", 1);
 		setenv("COLORTERM", "truecolor", 1);
-		setenv("PS1", "\\t\\u@\\h:\\l:\\w\\$ ", 1);
 		const char *sh = (shell_path && *shell_path) ? shell_path : "/bin/bash";
 		execlp(sh, sh, "-i", NULL);
 		exit(127);
