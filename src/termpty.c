@@ -130,9 +130,8 @@ static void *TermptyReader(void *arg) {
 			
 			char *buf_last_line = TermbufOnlyKeepLastLine(buf_no_escapes);
 			TermbufWrite(&terminal_buffer, buf_last_line, strlen(buf_last_line));
-			
-			terminal_cursor_pos = buf_no_escapes_length;
-			terminal_buffer_length = buf_no_escapes_length;
+
+			terminal_cursor_pos = terminal_buffer_length = strlen(buf_last_line);
 
 			// Nudge SDL thread to redraw
 			SDL_Event ev;
