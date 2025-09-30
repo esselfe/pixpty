@@ -70,6 +70,9 @@ int main(int argc, char **argv) {
 		DeltaUpdate();
 		Render();
 
+		if (!TerminalChildIsAlive())
+			mainloopend = 1;
+
 		usleep(100000); // 100ms
 	}
 	
