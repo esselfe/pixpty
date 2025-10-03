@@ -126,7 +126,8 @@ static void *TermptyReader(void *arg) {
 			}
 			printf("<###\n"); */
 			
-			ScrollbackAddLine(buf_no_escapes, buf_no_escapes_length, 0);
+			if (buf_no_escapes_length > 0)
+				ScrollbackAddLine(buf_no_escapes, buf_no_escapes_length, 0);
 			
 			char *buf_last_line = TermbufOnlyKeepLastLine(buf_no_escapes);
 			TermbufWrite(&terminal_buffer, buf_last_line, strlen(buf_last_line));
