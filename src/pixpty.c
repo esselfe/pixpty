@@ -8,7 +8,7 @@
 
 #include "pixpty.h"
 
-char *pixpty_version_string = "0.0.3";
+char *pixpty_version_string = "0.0.4";
 char *window_title;
 unsigned int window_title_len = 1023;
 int winX = 100, winY = 50, winW = 800, winH = 600;
