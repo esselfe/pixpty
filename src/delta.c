@@ -42,6 +42,10 @@ void DeltaUpdate(void) {
 
 		sprintf(fps_text, "%u fps", fps);
 		fps = 0;
+
+		if (!TerminalChildIsAlive())
+			mainloopend = 1;
+
 	}
 }
 
